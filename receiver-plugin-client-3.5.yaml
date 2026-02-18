@@ -1,0 +1,40 @@
+- id: ID_c3npf4d4
+  version: "1.2.0"
+  name: "Alpine 远程部署助手"
+  description: "配合 Alpine 工业级接收器，将当前配置安全推送至远程服务器"
+  tags: []
+  type: File
+  url: ""
+  status: 0
+  path: data/plugins/plugin-alpine-deployer.js.js
+  triggers:
+    - on::manual
+    - on::context
+  hasUI: true
+  menus: {}
+  context:
+    profiles:
+      上传到服务器: onContextDeploy
+    subscriptions: {}
+    rulesets: {}
+    plugins: {}
+    scheduledtasks: {}
+  configuration:
+    - name: ServerAddress
+      description: 服务器地址
+      note: 例如 192.168.1.100:3000
+      type: string
+      value: ""
+    - name: Token
+      description: 验证 Token
+      note: API 访问令牌
+      type: string
+      value: ""
+    - name: Secret
+      description: AES 加密密钥
+      note: 必须与服务端一致
+      type: string
+      value: ""
+  disabled: false
+  install: true
+  installed: false
