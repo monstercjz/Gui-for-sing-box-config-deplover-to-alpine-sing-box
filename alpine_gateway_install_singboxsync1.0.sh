@@ -118,7 +118,7 @@ const DEFAULT_SYSTEM_CONFIG = {
             type: "tun",
             tag: "tun-in",
             interface_name: "tun0",     // 虚拟网卡名称
-            inet4_address: "172.19.0.1/30",
+            address: "172.19.0.1/30",
             mtu: 9000,                  // 高性能 MTU
             auto_route: true,           // 自动接管系统路由
             strict_route: true,         // 防止 DNS 泄漏
@@ -435,20 +435,33 @@ log "配置 OpenRC 服务守护进程..."
 cat << EOF > "/etc/init.d/$SERVICE_NAME"
 #!/sbin/openrc-run
 
-name="$SERVICE_NAME"
-description="Sing-box Config Receiver Service"
+name="sing-box-receiver"
+description="Sing-box Receiver Service"
 
-directory="$INSTALL_DIR"
+# 1. 务必修改为你实际存放 server.js 的目录
+directory="/root/sing-box-receiver"
+
+# 2. 务必确保这里是 `which node` 查出来的路径
 command="/usr/bin/node"
 command_args="server.js"
+
+# 3. 指定运行用户
 command_user="root"
 
+# 4. 使用 supervise-daemon 守护进程（防崩溃 + 后台运行）
 supervisor="supervise-daemon"
 respawn_delay=5
 respawn_max=0
 
-output_log="$LOG_DIR/$SERVICE_NAME.log"
-error_log="$LOG_DIR/$SERVICE_NAME.err.log"
+# 5. 日志路径
+output_log="/var/log/sing-box-receiver.log"
+error_log="/var/log/sing-box-receiver.err.log"
+# --- 添加以下两行解决中文乱码 ---
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+# 6. 【关键修正】强制设置环境变量，防止找不到 node_modules
+export NODE_ENV=production
+export PATH=$PATH:/usr/bin:/usr/local/bin
 
 depend() {
     need net
@@ -456,8 +469,15 @@ depend() {
 }
 
 start_pre() {
-    checkpath -f -m 0644 -o root "$output_log"
-    checkpath -f -m 0644 -o root "$error_log"
+    # 检查 server.js 是否存在
+    if [ ! -f "$directory/$command_args" ]; then
+        eerror "Error: Cannot find $command_args in $directory"
+        return 1
+    fi
+
+    # 确保日志文件存在且有权限
+    checkpath -f -m 0644 -o "$command_user" "$output_log"
+    checkpath -f -m 0644 -o "$command_user" "$error_log"
 }
 EOF
 

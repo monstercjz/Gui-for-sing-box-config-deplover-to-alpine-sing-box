@@ -945,7 +945,9 @@ respawn_max=0
 # 5. 日志路径
 output_log="/var/log/sing-box-receiver.log"
 error_log="/var/log/sing-box-receiver.err.log"
-
+# --- 添加以下两行解决中文乱码 ---
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
 # 6. 【关键修正】强制设置环境变量，防止找不到 node_modules
 export NODE_ENV=production
 export PATH=$PATH:/usr/bin:/usr/local/bin
